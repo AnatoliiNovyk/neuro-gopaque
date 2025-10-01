@@ -6,6 +6,7 @@ export function useTracks() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refetch, setRefetch] = useState(0);
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -22,23 +23,25 @@ export function useTracks() {
             setTracks([
               {
                 id: '1',
-                title: 'Midnight Dreams',
-                soundcloud_url: 'https://soundcloud.com/example/midnight-dreams',
+                title: 'You came like a wind in the night (Main)',
+                soundcloud_url: 'https://soundcloud.com/neuro-gopaque/you-came-like-a-wind-in-the-night-main',
                 soundcloud_id: '123456789',
                 image_url: 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg',
-                description: 'Атмосферний трек з глибокими басами',
+                description: 'Atmospheric track with deep emotional undertones',
                 order_index: 1,
-                created_at: new Date().toISOString()
+               created_at: new Date().toISOString(),
+               audio_url: 'https://www.w3schools.com/html/horse.mp3'
               },
               {
                 id: '2',
-                title: 'Electric Pulse',
-                soundcloud_url: 'https://soundcloud.com/example/electric-pulse',
+                title: 'Digital Emotions',
+                soundcloud_url: 'https://soundcloud.com/neuro-gopaque/digital-emotions',
                 soundcloud_id: '987654321',
                 image_url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg',
-                description: 'Енергійна композиція з електронними битами',
+                description: 'Electronic composition with modern beats',
                 order_index: 2,
-                created_at: new Date().toISOString()
+               created_at: new Date().toISOString(),
+               audio_url: 'https://www.w3schools.com/html/mov_bbb.mp3'
               }
             ]);
           } else {
@@ -55,7 +58,9 @@ export function useTracks() {
     };
 
     fetchTracks();
-  }, []);
+  }, [refetch]);
 
-  return { tracks, loading, error };
+  const refetchTracks = () => setRefetch(prev => prev + 1);
+
+  return { tracks, loading, error, refetchTracks };
 }

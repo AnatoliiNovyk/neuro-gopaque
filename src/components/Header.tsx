@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Music, Menu, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useArtist } from '../hooks/useArtist';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { artist } = useArtist();
   const location = useLocation();
 
   useEffect(() => {
@@ -39,11 +41,19 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-              <Music className="w-5 h-5 text-white" />
-            </div>
+            {artist?.logo_url ? (
+              <img
+                src={artist.logo_url}
+                alt="Logo"
+                className="w-8 h-8 rounded-lg object-cover group-hover:scale-110 transition-transform duration-200"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <Music className="w-5 h-5 text-white" />
+              </div>
+            )}
             <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              ALEX NOVA
+              {artist?.name || 'ALEX NOVA'}
             </span>
           </Link>
 
