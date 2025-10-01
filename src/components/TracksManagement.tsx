@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Music, Plus, Edit2, Trash2, Save, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { Music, Plus, CreditCard as Edit2, Trash2, Save, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTracks } from '../hooks/useTracks';
 import { Track } from '../types';
 

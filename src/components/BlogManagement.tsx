@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Plus, Edit2, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
+import { FileText, Plus, CreditCard as Edit2, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
 import { useBlog } from '../hooks/useBlog';
 import { BlogPost } from '../types';
 
