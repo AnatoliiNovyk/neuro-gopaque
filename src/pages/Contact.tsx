@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useContactInfo } from '../hooks/useContactInfo';
 
+// Success/error message types
+type MessageType = 'success' | 'error' | 'loading';
 const contactSchema = z.object({
   name: z.string().min(2, 'Ім\'я має містити хоча б 2 символи'),
   email: z.string().email('Невірний формат email'),
@@ -15,8 +17,13 @@ const contactSchema = z.object({
 
 type ContactForm = z.infer<typeof contactSchema>;
 
+interface SubmissionStatus {
+  type: MessageType;
+  message: string;
+}
+
 export default function Contact() {
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus | null>(null);
   const { contactInfo, loading } = useContactInfo();
   
   const {
@@ -29,12 +36,47 @@ export default function Contact() {
   });
 
   const onSubmit = async (data: ContactForm) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('Contact form submitted:', data);
-    setIsSubmitted(true);
-    reset();
-    setTimeout(() => setIsSubmitted(false), 3000);
+    setSubmissionStatus({ type: 'loading', message: 'Надсилання повідомлення...' });
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSubmissionStatus({ 
+          type: 'success', 
+          message: result.message || 'Повідомлення успішно надіслано!' 
+        });
+        reset(); // Clear the form
+      } else {
+        setSubmissionStatus({ 
+          type: 'error', 
+          message: result.error || 'Помилка при надсиланні повідомлення' 
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setSubmissionStatus({ 
+        type: 'error', 
+        message: 'Помилка мережі. Перевірте підключення до інтернету.' 
+      });
+    }
+
+    // Clear the message after 5 seconds
+    setTimeout(() => setSubmissionStatus(null), 5000);
   };
 
   if (loading) {
@@ -175,6 +217,28 @@ export default function Contact() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
+              {/* Submission Status Message */}
+              {submissionStatus && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mb-6 p-4 rounded-lg border ${
+                    submissionStatus.type === 'success'
+                      ? 'bg-green-600/20 border-green-600/30 text-green-300'
+                      : submissionStatus.type === 'error'
+                      ? 'bg-red-600/20 border-red-600/30 text-red-300'
+                      : 'bg-blue-600/20 border-blue-600/30 text-blue-300'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    {submissionStatus.type === 'loading' && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    )}
+                    <span>{submissionStatus.message}</span>
+                  </div>
+                </motion.div>
+              )}
+
               <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl space-y-6">
                 <h2 className="text-2xl font-bold text-white mb-6">
                   {contactInfo?.form_title || 'Надіслати повідомлення'}
@@ -244,26 +308,15 @@ export default function Contact() {
 
                 <motion.button
                   type="submit"
-                  disabled={isSubmitting || isSubmitted}
-                  className={`w-full py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 ${
-                    isSubmitted
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:scale-105'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-                  whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                  disabled={isSubmitting || submissionStatus?.type === 'loading'}
+                  className="w-full py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={!isSubmitting && submissionStatus?.type !== 'loading' ? { scale: 1.02 } : {}}
+                  whileTap={!isSubmitting && submissionStatus?.type !== 'loading' ? { scale: 0.98 } : {}}
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || submissionStatus?.type === 'loading' ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       <span>Надсилання...</span>
-                    </>
-                  ) : isSubmitted ? (
-                    <>
-                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                      </div>
-                      <span>Відправлено!</span>
                     </>
                   ) : (
                     <>
