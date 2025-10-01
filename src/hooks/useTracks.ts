@@ -6,7 +6,6 @@ export function useTracks() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refetch, setRefetch] = useState(0);
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -23,25 +22,23 @@ export function useTracks() {
             setTracks([
               {
                 id: '1',
-                title: 'You came like a wind in the night (Main)',
-                soundcloud_url: 'https://soundcloud.com/neuro-gopaque/you-came-like-a-wind-in-the-night-main',
+                title: 'Midnight Dreams',
+                soundcloud_url: 'https://soundcloud.com/example/midnight-dreams',
                 soundcloud_id: '123456789',
                 image_url: 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg',
-                description: 'Atmospheric track with deep emotional undertones',
+                description: 'Атмосферний трек з глибокими басами',
                 order_index: 1,
-               created_at: new Date().toISOString(),
-               audio_url: 'https://www.w3schools.com/html/horse.mp3'
+                created_at: new Date().toISOString()
               },
               {
                 id: '2',
-                title: 'Digital Emotions',
-                soundcloud_url: 'https://soundcloud.com/neuro-gopaque/digital-emotions',
+                title: 'Electric Pulse',
+                soundcloud_url: 'https://soundcloud.com/example/electric-pulse',
                 soundcloud_id: '987654321',
                 image_url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg',
-                description: 'Electronic composition with modern beats',
+                description: 'Енергійна композиція з електронними битами',
                 order_index: 2,
-               created_at: new Date().toISOString(),
-               audio_url: 'https://www.w3schools.com/html/mov_bbb.mp3'
+                created_at: new Date().toISOString()
               }
             ]);
           } else {
@@ -58,9 +55,7 @@ export function useTracks() {
     };
 
     fetchTracks();
-  }, [refetch]);
+  }, []);
 
-  const refetchTracks = () => setRefetch(prev => prev + 1);
-
-  return { tracks, loading, error, refetchTracks };
+  return { tracks, loading, error };
 }

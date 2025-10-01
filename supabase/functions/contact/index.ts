@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Create Supabase client with service role key for database operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -46,51 +45,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Additional validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Невірний формат email адреси' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Save contact submission to database
-    const { data, error: insertError } = await supabase
-      .from('contact_submissions')
-      .insert([
-        {
-          name: name.trim(),
-          email: email.toLowerCase().trim(),
-          subject: subject.trim(),
-          message: message.trim()
-        }
-      ])
-      .select();
-
-    if (insertError) {
-      console.error('Database insert error:', insertError);
-      return new Response(
-        JSON.stringify({ error: 'Помилка при збереженні повідомлення' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Log successful submission
+    // Log the contact form submission (in production, you might want to store it in a table or send an email)
     console.log('Contact form submission:', { name, email, subject, message });
-    console.log('Successfully saved to database with ID:', data?.[0]?.id);
+
+    // For demo purposes, we'll just log it and return success
+    // In production, you would:
+    // 1. Store the message in a database table
+    // 2. Send an email notification
+    // 3. Integrate with a CRM system
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Повідомлення успішно надіслано та збережено!',
-        id: data?.[0]?.id
+        message: 'Повідомлення успішно надіслано!' 
       }),
       { 
         status: 200,
@@ -103,7 +70,7 @@ Deno.serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: 'Помилка сервера при обробці повідомлення' 
+        error: 'Помилка при обробці повідомлення' 
       }),
       { 
         status: 500,

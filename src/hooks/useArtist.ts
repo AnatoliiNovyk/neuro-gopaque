@@ -14,29 +14,31 @@ export function useArtist() {
         const { data, error } = await supabase
           .from('artists')
           .select('*')
-          .limit(1);
+          .limit(1)
+          .single();
 
         if (error) {
-          setError(error.message);
-        } else if (data && data.length === 0) {
-          // No data found, use default artist data
-          setArtist({
-            id: 'default',
-            name: 'АLEX NOVA',
-            bio: 'Український музичний продюсер та діджей, що створює унікальні електронні композиції з елементами поп та хіп-хоп музики.',
-            image_url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg',
-            logo_url: '',
-            soundcloud_username: 'alexnova',
-            social_links: {
-              instagram: 'https://instagram.com/alexnova',
-              twitter: 'https://twitter.com/alexnova',
-              youtube: 'https://youtube.com/alexnova'
-            },
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+          if (error.code === 'PGRST116') {
+            // No data found, use default artist data
+            setArtist({
+              id: 'default',
+              name: 'АLEX NOVA',
+              bio: 'Український музичний продюсер та діджей, що створює унікальні електронні композиції з елементами поп та хіп-хоп музики.',
+              image_url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg',
+              soundcloud_username: 'alexnova',
+              social_links: {
+                instagram: 'https://instagram.com/alexnova',
+                twitter: 'https://twitter.com/alexnova',
+                youtube: 'https://youtube.com/alexnova'
+              },
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          } else {
+            setError(error.message);
+          }
         } else {
-          setArtist(data[0]);
+          setArtist(data);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');

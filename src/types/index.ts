@@ -3,7 +3,6 @@ export interface Artist {
   name: string;
   bio: string;
   image_url: string;
-  logo_url: string;
   soundcloud_username: string;
   social_links: {
     instagram?: string;
@@ -23,10 +22,7 @@ export interface Track {
   image_url?: string;
   description?: string;
   order_index: number;
-  audio_url?: string;
-  file_path?: string;
-  file_size?: number;
-  duration?: number;
+  created_at: string;
 }
 
 export interface BlogPost {
@@ -45,14 +41,4 @@ export interface ContactForm {
   email: string;
   subject: string;
   message: string;
-}
-
-export interface SiteStats {
-  id: string;
-  label: string;
-  value: string;
-  icon_name: string;
-  order_index: number;
-  created_at: string;
-  updated_at: string;
 }

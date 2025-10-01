@@ -1,27 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Music } from 'lucide-react';
-import { useTracks } from '../hooks/useTracks';
+import { ExternalLink, Play } from 'lucide-react';
 
 interface SoundCloudPlayerProps {
-  trackUrl?: string;
-  title?: string;
+  trackUrl: string;
+  title: string;
   imageUrl?: string;
   description?: string;
 }
-
-// Function to extract track ID or full URL from SoundCloud URL
-const getSoundCloudEmbedUrl = (url: string): string => {
-  // If it's already a full SoundCloud URL, encode it for the embed
-  if (url.includes('soundcloud.com/')) {
-    const encodedUrl = encodeURIComponent(url);
-    return `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23a855f7&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
-  }
-  
-  // If it's just an ID, construct the API URL
-  const encodedUrl = encodeURIComponent(`https://api.soundcloud.com/tracks/${url}`);
-  return `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23a855f7&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
-};
 
 export default function SoundCloudPlayer({ 
   trackUrl, 
@@ -29,129 +15,72 @@ export default function SoundCloudPlayer({
   imageUrl, 
   description 
 }: SoundCloudPlayerProps) {
-  const { tracks, loading } = useTracks();
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400"></div>
-      </div>
-    );
-  }
-
-  // Filter tracks that have SoundCloud URLs
-  const validTracks = tracks.filter(track => 
-    track.soundcloud_url && 
-    track.soundcloud_url.trim() !== '' &&
-    (track.soundcloud_url.includes('soundcloud.com') || /^\d+$/.test(track.soundcloud_url))
-  );
-
-  if (validTracks.length === 0) {
-    return (
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 text-center">
-        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Music className="w-8 h-8 text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-white mb-4">
-          Треків поки що немає
-        </h3>
-        <p className="text-gray-300 mb-6">
-          Додайте SoundCloud треки через адмін панель для їх відображення тут
-        </p>
-        <a 
-          href="/admin" 
-          className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
-        >
-          Перейти до адмін панелі
-        </a>
-      </div>
-    );
-  }
+  // Extract track ID from SoundCloud URL for embedding
+  const getEmbedUrl = (url: string) => {
+    // For demo purposes, we'll use a placeholder embed
+    // In production, you'd extract the actual track ID
+    return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%238b5cf6&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`;
+  };
 
   return (
-    <div className="space-y-8">
-      <motion.div
-        className="text-center mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-2xl font-bold text-white mb-2">
-          🎵 SoundCloud Плеєр
-        </h2>
-        <p className="text-gray-300">
-          Слухайте мої треки прямо з SoundCloud
-        </p>
-      </motion.div>
+    <motion.div 
+      className="bg-gray-800 rounded-xl overflow-hidden group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Track Image */}
+      <div className="relative overflow-hidden h-48">
+        <img
+          src={imageUrl || 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg'}
+          alt={title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-white font-semibold text-lg mb-1">{title}</h3>
+          {description && (
+            <p className="text-gray-300 text-sm line-clamp-2">{description}</p>
+          )}
+        </div>
+        
+        {/* Play button overlay */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <motion.button
+            className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center shadow-lg"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Play className="w-6 h-6 text-white ml-1" />
+          </motion.button>
+        </div>
+      </div>
 
-      {validTracks.map((track, index) => (
-        <motion.div
-          key={track.id}
-          className="bg-gray-800/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: index * 0.1 }}
-        >
-          {/* Track Header */}
-          <div className="p-6 border-b border-gray-700/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-1">
-                  {track.title}
-                </h3>
-                {track.description && (
-                  <p className="text-gray-400 text-sm">
-                    {track.description}
-                  </p>
-                )}
-              </div>
-              <motion.a
-                href={track.soundcloud_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors text-sm"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>SoundCloud</span>
-              </motion.a>
-            </div>
-          </div>
-
-          {/* SoundCloud Embed */}
-          <div className="p-6">
-            <div className="bg-gray-900/50 rounded-xl p-4">
-              <iframe
-                width="100%"
-                height="166"
-                scrolling="no"
-                frameBorder="no"
-                allow="autoplay"
-                src={getSoundCloudEmbedUrl(track.soundcloud_url)}
-                className="rounded-lg"
-                title={`SoundCloud player for ${track.title}`}
-              />
-              
-              {/* Custom styling for SoundCloud attribution */}
-              <div className="mt-3 pt-3 border-t border-gray-700/30">
-                <p className="text-xs text-gray-500 text-center">
-                  Powered by{' '}
-                  <a 
-                    href="https://soundcloud.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-orange-400 hover:text-orange-300 transition-colors"
-                  >
-                    SoundCloud
-                  </a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-
-    </div>
+      {/* SoundCloud Embed */}
+      <div className="p-4">
+        <iframe
+          width="100%"
+          height="120"
+          scrolling="no"
+          frameBorder="no"
+          allow="autoplay"
+          src={getEmbedUrl(trackUrl)}
+          className="rounded-lg"
+        ></iframe>
+        
+        <div className="mt-3 flex justify-between items-center">
+          <a
+            href={trackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="text-sm font-medium">Відкрити в SoundCloud</span>
+          </a>
+        </div>
+      </div>
+    </motion.div>
   );
 }

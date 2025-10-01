@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, Instagram, Twitter, Youtube, Facebook } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Instagram, Twitter, Youtube } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useContactInfo } from '../hooks/useContactInfo';
 
-// Success/error message types
-type MessageType = 'success' | 'error' | 'loading';
 const contactSchema = z.object({
   name: z.string().min(2, 'Ім\'я має містити хоча б 2 символи'),
   email: z.string().email('Невірний формат email'),
@@ -17,14 +14,8 @@ const contactSchema = z.object({
 
 type ContactForm = z.infer<typeof contactSchema>;
 
-interface SubmissionStatus {
-  type: MessageType;
-  message: string;
-}
-
 export default function Contact() {
-  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus | null>(null);
-  const { contactInfo, loading } = useContactInfo();
+  const [isSubmitted, setIsSubmitted] = useState(false);
   
   const {
     register,
@@ -36,104 +27,40 @@ export default function Contact() {
   });
 
   const onSubmit = async (data: ContactForm) => {
-    setSubmissionStatus({ type: 'loading', message: 'Надсилання повідомлення...' });
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          subject: data.subject,
-          message: data.message,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setSubmissionStatus({ 
-          type: 'success', 
-          message: result.message || 'Повідомлення успішно надіслано!' 
-        });
-        reset(); // Clear the form
-      } else {
-        setSubmissionStatus({ 
-          type: 'error', 
-          message: result.error || 'Помилка при надсиланні повідомлення' 
-        });
-      }
-    } catch (error) {
-      console.error('Error submitting contact form:', error);
-      setSubmissionStatus({ 
-        type: 'error', 
-        message: 'Помилка мережі. Перевірте підключення до інтернету.' 
-      });
-    }
-
-    // Clear the message after 5 seconds
-    setTimeout(() => setSubmissionStatus(null), 5000);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Contact form submitted:', data);
+    setIsSubmitted(true);
+    reset();
+    setTimeout(() => setIsSubmitted(false), 3000);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-400"></div>
-      </div>
-    );
-  }
-
-  const contactData = [
+  const contactInfo = [
     {
       icon: Mail,
       label: 'Email',
-      value: contactInfo?.email || 'contact@alexnova.music',
-      href: `mailto:${contactInfo?.email || 'contact@alexnova.music'}`
+      value: 'contact@alexnova.music',
+      href: 'mailto:contact@alexnova.music'
     },
     {
       icon: Phone,
       label: 'Телефон',
-      value: contactInfo?.phone || '+380 XX XXX XX XX',
-      href: `tel:${contactInfo?.phone?.replace(/\s/g, '') || '+380xxxxxxxxx'}`
+      value: '+380 XX XXX XX XX',
+      href: 'tel:+380xxxxxxxxx'
     },
     {
       icon: MapPin,
       label: 'Локація',
-      value: contactInfo?.location || 'Київ, Україна',
+      value: 'Київ, Україна',
       href: '#'
     }
   ];
 
   const socialLinks = [
-    contactInfo?.social_links?.instagram ? {
-      icon: Instagram,
-      href: contactInfo.social_links.instagram,
-      label: 'Instagram',
-      color: 'hover:text-pink-400'
-    } : null,
-    contactInfo?.social_links?.twitter ? {
-      icon: Twitter,
-      href: contactInfo.social_links.twitter,
-      label: 'Twitter',
-      color: 'hover:text-blue-400'
-    } : null,
-    contactInfo?.social_links?.youtube ? {
-      icon: Youtube,
-      href: contactInfo.social_links.youtube,
-      label: 'YouTube',
-      color: 'hover:text-red-400'
-    } : null,
-    contactInfo?.social_links?.facebook ? {
-      icon: Facebook,
-      href: contactInfo.social_links.facebook,
-      label: 'Facebook',
-      color: 'hover:text-blue-500'
-    } : null
-  ].filter(Boolean);
+    { icon: Instagram, href: 'https://instagram.com/alexnova', label: 'Instagram', color: 'hover:text-pink-400' },
+    { icon: Twitter, href: 'https://twitter.com/alexnova', label: 'Twitter', color: 'hover:text-blue-400' },
+    { icon: Youtube, href: 'https://youtube.com/alexnova', label: 'YouTube', color: 'hover:text-red-400' }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 pt-16">
@@ -147,10 +74,10 @@ export default function Contact() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-6">
-              {contactInfo?.title || 'Контакти'}
+              Контакти
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {contactInfo?.subtitle || 'Готовий до співпраці? Зв\'яжіться зі мною для обговорення проектів'}
+              Готовий до співпраці? Зв'яжіться зі мною для обговорення проектів
             </p>
           </motion.div>
 
@@ -162,12 +89,10 @@ export default function Contact() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h2 className="text-3xl font-bold text-white mb-6">
-                {contactInfo?.contact_title || 'Зв\'яжіться зі мною'}
-              </h2>
+              <h2 className="text-3xl font-bold text-white mb-6">Зв'яжіться зі мною</h2>
               
               <div className="space-y-6">
-                {contactData.map(({ icon: Icon, label, value, href }, index) => (
+                {contactInfo.map(({ icon: Icon, label, value, href }, index) => (
                   <motion.a
                     key={label}
                     href={href}
@@ -189,9 +114,7 @@ export default function Contact() {
 
               {/* Social Links */}
               <div className="pt-8">
-                <h3 className="text-xl font-semibold text-white mb-4">
-                  {contactInfo?.social_title || 'Соціальні мережі'}
-                </h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Соціальні мережі</h3>
                 <div className="flex space-x-4">
                   {socialLinks.map(({ icon: Icon, href, label, color }) => (
                     <motion.a
@@ -217,32 +140,8 @@ export default function Contact() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              {/* Submission Status Message */}
-              {submissionStatus && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`mb-6 p-4 rounded-lg border ${
-                    submissionStatus.type === 'success'
-                      ? 'bg-green-600/20 border-green-600/30 text-green-300'
-                      : submissionStatus.type === 'error'
-                      ? 'bg-red-600/20 border-red-600/30 text-red-300'
-                      : 'bg-blue-600/20 border-blue-600/30 text-blue-300'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    {submissionStatus.type === 'loading' && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    )}
-                    <span>{submissionStatus.message}</span>
-                  </div>
-                </motion.div>
-              )}
-
               <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl space-y-6">
-                <h2 className="text-2xl font-bold text-white mb-6">
-                  {contactInfo?.form_title || 'Надіслати повідомлення'}
-                </h2>
+                <h2 className="text-2xl font-bold text-white mb-6">Надіслати повідомлення</h2>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -308,20 +207,31 @@ export default function Contact() {
 
                 <motion.button
                   type="submit"
-                  disabled={isSubmitting || submissionStatus?.type === 'loading'}
-                  className="w-full py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={!isSubmitting && submissionStatus?.type !== 'loading' ? { scale: 1.02 } : {}}
-                  whileTap={!isSubmitting && submissionStatus?.type !== 'loading' ? { scale: 0.98 } : {}}
+                  disabled={isSubmitting || isSubmitted}
+                  className={`w-full py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 ${
+                    isSubmitted
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:scale-105'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+                  whileTap={!isSubmitting ? { scale: 0.98 } : {}}
                 >
-                  {isSubmitting || submissionStatus?.type === 'loading' ? (
+                  {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       <span>Надсилання...</span>
                     </>
+                  ) : isSubmitted ? (
+                    <>
+                      <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      </div>
+                      <span>Відправлено!</span>
+                    </>
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      <span>{contactInfo?.form_button_text || 'Надіслати повідомлення'}</span>
+                      <span>Надіслати повідомлення</span>
                     </>
                   )}
                 </motion.button>
