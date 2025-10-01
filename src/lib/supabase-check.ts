@@ -19,7 +19,7 @@ export async function checkSupabaseConnection() {
     // Спробуємо виконати простий запит
     const { data, error } = await supabase
       .from('artists')
-      .select('id')
+      .select('count(*)')
       .limit(1);
 
     if (error) {
