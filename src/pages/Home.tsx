@@ -1,10 +1,21 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Music, Star, Users } from 'lucide-react';
+import { Play, Music, Star, Users, TrendingUp } from 'lucide-react';
 import { useArtist } from '../hooks/useArtist';
+import { useStats } from '../hooks/useStats';
 
 export default function Home() {
   const { artist, loading } = useArtist();
+  const { stats, loading: statsLoading } = useStats();
+
+  // Icon mapping
+  const iconMap = {
+    music: Music,
+    users: Users,
+    star: Star,
+    play: Play,
+    trending: TrendingUp
+  };
 
   if (loading) {
     return (
@@ -13,13 +24,6 @@ export default function Home() {
       </div>
     );
   }
-
-  const stats = [
-    { icon: Music, label: 'Треків', value: '50+' },
-    { icon: Users, label: 'Фанів', value: '100K+' },
-    { icon: Star, label: 'Рейтинг', value: '4.9' },
-    { icon: Play, label: 'Прослухувань', value: '2M+' }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
@@ -122,9 +126,11 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            {stats.map(({ icon: Icon, label, value }, index) => (
+            {(statsLoading ? [] : stats).map((stat, index) => {
+              const IconComponent = iconMap[stat.icon_name as keyof typeof iconMap] || Music;
+              return (
               <motion.div
-                key={label}
+                key={stat.id}
                 className="text-center group"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -132,12 +138,13 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                  <Icon className="w-8 h-8 text-white" />
+                  <IconComponent className="w-8 h-8 text-white" />
                 </div>
-                <div className="text-3xl font-bold text-white mb-1">{value}</div>
-                <div className="text-gray-400">{label}</div>
+                <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-gray-400">{stat.label}</div>
               </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
         </div>
       </section>
