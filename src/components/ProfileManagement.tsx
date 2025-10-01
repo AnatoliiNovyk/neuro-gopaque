@@ -287,7 +287,7 @@ export default function ProfileManagement() {
         >
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
           <span className="text-sm font-medium">Збереження...</span>
-        </div>
+        </motion.div>
       )}
     </div>
   );
