@@ -1,20 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  BarChart3, 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Save, 
-  X, 
-  ArrowUp, 
-  ArrowDown,
-  Music,
-  Users,
-  Star,
-  Play,
-  TrendingUp
-} from 'lucide-react';
+import { BarChart3, Plus, CreditCard as Edit2, Trash2, Save, X, ArrowUp, ArrowDown, Music, Users, Star, Play, TrendingUp } from 'lucide-react';
 import { useStats } from '../hooks/useStats';
 import { SiteStats } from '../types';
 
