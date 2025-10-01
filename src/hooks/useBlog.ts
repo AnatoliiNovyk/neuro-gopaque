@@ -6,6 +6,7 @@ export function useBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refetch, setRefetch] = useState(0);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -56,7 +57,111 @@ export function useBlog() {
     };
 
     fetchPosts();
-  }, []);
+  }, [refetch]);
 
-  return { posts, loading, error };
+  const fetchAllPosts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .insert([{
+          ...postData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      refetchPosts();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error creating post:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const updatePost = async (id: string, updates: Partial<BlogPost>) => {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchPosts();
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating post:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const deletePost = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchPosts();
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const togglePublished = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({ 
+          published: !currentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchPosts();
+      return { success: true };
+    } catch (error) {
+      console.error('Error toggling published status:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const refetchPosts = () => setRefetch(prev => prev + 1);
+
+  return { 
+    posts, 
+    loading, 
+    error,
+    fetchAllPosts,
+    createPost,
+    updatePost,
+    deletePost,
+    togglePublished,
+    refetchPosts
+  };
 }

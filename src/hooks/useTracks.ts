@@ -60,7 +60,80 @@ export function useTracks() {
     fetchTracks();
   }, [refetch]);
 
+  const createTrack = async (trackData: Omit<Track, 'id' | 'created_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('tracks')
+        .insert([trackData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      refetchTracks();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error creating track:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const updateTrack = async (id: string, updates: Partial<Track>) => {
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchTracks();
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating track:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const deleteTrack = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchTracks();
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting track:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const reorderTrack = async (id: string, newOrderIndex: number) => {
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .update({ order_index: newOrderIndex })
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchTracks();
+      return { success: true };
+    } catch (error) {
+      console.error('Error reordering track:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
   const refetchTracks = () => setRefetch(prev => prev + 1);
 
-  return { tracks, loading, error, refetchTracks };
+  return { 
+    tracks, 
+    loading, 
+    error, 
+    refetchTracks,
+    createTrack,
+    updateTrack,
+    deleteTrack,
+    reorderTrack
+  };
 }

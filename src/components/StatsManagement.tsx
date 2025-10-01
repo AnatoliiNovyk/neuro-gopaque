@@ -5,10 +5,11 @@ import { useStats } from '../hooks/useStats';
 import { SiteStats } from '../types';
 
 export default function StatsManagement() {
-  const { stats, loading, error, refetchStats } = useStats();
+  const { stats, loading, error, createStat, updateStat, deleteStat, reorderStat } = useStats();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<SiteStats>>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [operationLoading, setOperationLoading] = useState(false);
   const [newStat, setNewStat] = useState<Partial<SiteStats>>({
     label: '',
     value: '',
@@ -41,11 +42,16 @@ export default function StatsManagement() {
   };
 
   const handleSave = async (id: string) => {
-    // In a real implementation, you would call an API to update the stat
-    console.log('Saving stat:', id, editData);
-    setEditingId(null);
-    setEditData({});
-    refetchStats();
+    setOperationLoading(true);
+    const result = await updateStat(id, editData);
+    
+    if (result.success) {
+      setEditingId(null);
+      setEditData({});
+    } else {
+      alert('Помилка збереження статистики: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   const handleCancel = () => {
@@ -54,36 +60,63 @@ export default function StatsManagement() {
   };
 
   const handleAdd = async () => {
-    // In a real implementation, you would call an API to create a new stat
-    console.log('Adding new stat:', newStat);
-    setIsAdding(false);
-    setNewStat({
-      label: '',
-      value: '',
-      icon_name: 'music',
-      order_index: 0
+    if (!newStat.label || !newStat.value) {
+      alert('Назва та значення обов\'язкові');
+      return;
+    }
+
+    setOperationLoading(true);
+    const result = await createStat({
+      label: newStat.label!,
+      value: newStat.value!,
+      icon_name: newStat.icon_name!,
+      order_index: newStat.order_index || stats.length + 1
     });
-    refetchStats();
+    
+    if (result.success) {
+      setIsAdding(false);
+      setNewStat({
+        label: '',
+        value: '',
+        icon_name: 'music',
+        order_index: 0
+      });
+    } else {
+      alert('Помилка створення статистики: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Ви впевнені, що хочете видалити цю статистику?')) {
-      // In a real implementation, you would call an API to delete the stat
-      console.log('Deleting stat:', id);
-      refetchStats();
+      setOperationLoading(true);
+      const result = await deleteStat(id);
+      
+      if (!result.success) {
+        alert('Помилка видалення статистики: ' + result.error);
+      }
+      setOperationLoading(false);
     }
   };
 
   const moveUp = async (stat: SiteStats) => {
-    // In a real implementation, you would update the order_index
-    console.log('Moving up:', stat.id);
-    refetchStats();
+    if (stat.order_index > 1) {
+      setOperationLoading(true);
+      const result = await reorderStat(stat.id, stat.order_index - 1);
+      if (!result.success) {
+        alert('Помилка переміщення: ' + result.error);
+      }
+      setOperationLoading(false);
+    }
   };
 
   const moveDown = async (stat: SiteStats) => {
-    // In a real implementation, you would update the order_index
-    console.log('Moving down:', stat.id);
-    refetchStats();
+    setOperationLoading(true);
+    const result = await reorderStat(stat.id, stat.order_index + 1);
+    if (!result.success) {
+      alert('Помилка переміщення: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   if (loading) {

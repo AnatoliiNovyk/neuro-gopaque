@@ -5,10 +5,11 @@ import { useTracks } from '../hooks/useTracks';
 import { Track } from '../types';
 
 export default function TracksManagement() {
-  const { tracks, loading, error, refetchTracks } = useTracks();
+  const { tracks, loading, error, createTrack, updateTrack, deleteTrack, reorderTrack } = useTracks();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Track>>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [operationLoading, setOperationLoading] = useState(false);
   const [newTrack, setNewTrack] = useState<Partial<Track>>({
     title: '',
     soundcloud_url: '',
@@ -24,11 +25,16 @@ export default function TracksManagement() {
   };
 
   const handleSave = async (id: string) => {
-    // In a real implementation, you would call an API to update the track
-    console.log('Saving track:', id, editData);
-    setEditingId(null);
-    setEditData({});
-    refetchTracks();
+    setOperationLoading(true);
+    const result = await updateTrack(id, editData);
+    
+    if (result.success) {
+      setEditingId(null);
+      setEditData({});
+    } else {
+      alert('Помилка збереження треку: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   const handleCancel = () => {
@@ -37,38 +43,67 @@ export default function TracksManagement() {
   };
 
   const handleAdd = async () => {
-    // In a real implementation, you would call an API to create a new track
-    console.log('Adding new track:', newTrack);
-    setIsAdding(false);
-    setNewTrack({
-      title: '',
-      soundcloud_url: '',
-      soundcloud_id: '',
-      image_url: '',
-      description: '',
-      order_index: 0
+    if (!newTrack.title || !newTrack.soundcloud_url) {
+      alert('Назва треку та SoundCloud URL обов\'язкові');
+      return;
+    }
+
+    setOperationLoading(true);
+    const result = await createTrack({
+      title: newTrack.title!,
+      soundcloud_url: newTrack.soundcloud_url!,
+      soundcloud_id: newTrack.soundcloud_id || '',
+      image_url: newTrack.image_url || '',
+      description: newTrack.description || '',
+      order_index: newTrack.order_index || tracks.length + 1
     });
-    refetchTracks();
+    
+    if (result.success) {
+      setIsAdding(false);
+      setNewTrack({
+        title: '',
+        soundcloud_url: '',
+        soundcloud_id: '',
+        image_url: '',
+        description: '',
+        order_index: 0
+      });
+    } else {
+      alert('Помилка створення треку: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Ви впевнені, що хочете видалити цей трек?')) {
-      // In a real implementation, you would call an API to delete the track
-      console.log('Deleting track:', id);
-      refetchTracks();
+      setOperationLoading(true);
+      const result = await deleteTrack(id);
+      
+      if (!result.success) {
+        alert('Помилка видалення треку: ' + result.error);
+      }
+      setOperationLoading(false);
     }
   };
 
   const moveUp = async (track: Track) => {
-    // In a real implementation, you would update the order_index
-    console.log('Moving up:', track.id);
-    refetchTracks();
+    if (track.order_index > 1) {
+      setOperationLoading(true);
+      const result = await reorderTrack(track.id, track.order_index - 1);
+      if (!result.success) {
+        alert('Помилка переміщення: ' + result.error);
+      }
+      setOperationLoading(false);
+    }
   };
 
   const moveDown = async (track: Track) => {
-    // In a real implementation, you would update the order_index
-    console.log('Moving down:', track.id);
-    refetchTracks();
+    setOperationLoading(true);
+    const result = await reorderTrack(track.id, track.order_index + 1);
+    if (!result.success) {
+      alert('Помилка переміщення: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   if (loading) {

@@ -4,7 +4,7 @@ import { User, Camera, Save, Globe, Instagram, Twitter, Youtube, Facebook } from
 import { useArtist } from '../hooks/useArtist';
 
 export default function ProfileManagement() {
-  const { artist, loading, error } = useArtist();
+  const { artist, loading, error, updateArtist } = useArtist();
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
@@ -12,17 +12,18 @@ export default function ProfileManagement() {
     setSaving(true);
     setSaveStatus(null);
 
-    // In a real implementation, you would call an API to update the artist profile
-    console.log('Saving artist profile:', field, value);
+    const result = await updateArtist({ [field]: value });
     
-    // Simulate API call
-    setTimeout(() => {
+    if (result.success) {
       setSaveStatus('✅ Збережено');
-      setSaving(false);
-      
-      // Clear status after 3 seconds
-      setTimeout(() => setSaveStatus(null), 3000);
-    }, 1000);
+    } else {
+      setSaveStatus('❌ Помилка: ' + result.error);
+    }
+    
+    setSaving(false);
+    
+    // Clear status after 3 seconds
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const handleSocialLinkChange = (platform: string, url: string) => {
@@ -30,7 +31,7 @@ export default function ProfileManagement() {
       ...artist?.social_links,
       [platform]: url
     };
-    handleSave('social_links', JSON.stringify(updatedSocialLinks));
+    handleSave('social_links', updatedSocialLinks);
   };
 
   if (loading) {

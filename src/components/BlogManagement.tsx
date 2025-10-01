@@ -5,10 +5,11 @@ import { useBlog } from '../hooks/useBlog';
 import { BlogPost } from '../types';
 
 export default function BlogManagement() {
-  const { posts, loading, error } = useBlog();
+  const { posts, loading, error, createPost, updatePost, deletePost, togglePublished, fetchAllPosts } = useBlog();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<BlogPost>>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [operationLoading, setOperationLoading] = useState(false);
   const [newPost, setNewPost] = useState<Partial<BlogPost>>({
     title: '',
     content: '',
@@ -17,16 +18,27 @@ export default function BlogManagement() {
     published: false
   });
 
+  // Fetch all posts including drafts for admin
+  React.useEffect(() => {
+    fetchAllPosts();
+  }, []);
+
   const handleEdit = (post: BlogPost) => {
     setEditingId(post.id);
     setEditData(post);
   };
 
   const handleSave = async (id: string) => {
-    // In a real implementation, you would call an API to update the post
-    console.log('Saving blog post:', id, editData);
-    setEditingId(null);
-    setEditData({});
+    setOperationLoading(true);
+    const result = await updatePost(id, editData);
+    
+    if (result.success) {
+      setEditingId(null);
+      setEditData({});
+    } else {
+      alert('Помилка збереження поstu: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   const handleCancel = () => {
@@ -35,28 +47,55 @@ export default function BlogManagement() {
   };
 
   const handleAdd = async () => {
-    // In a real implementation, you would call an API to create a new post
-    console.log('Adding new blog post:', newPost);
-    setIsAdding(false);
-    setNewPost({
-      title: '',
-      content: '',
-      excerpt: '',
-      image_url: '',
-      published: false
+    if (!newPost.title || !newPost.content || !newPost.excerpt) {
+      alert('Заголовок, короткий опис та зміст обов\'язкові');
+      return;
+    }
+
+    setOperationLoading(true);
+    const result = await createPost({
+      title: newPost.title!,
+      content: newPost.content!,
+      excerpt: newPost.excerpt!,
+      image_url: newPost.image_url || '',
+      published: newPost.published || false
     });
+    
+    if (result.success) {
+      setIsAdding(false);
+      setNewPost({
+        title: '',
+        content: '',
+        excerpt: '',
+        image_url: '',
+        published: false
+      });
+    } else {
+      alert('Помилка створення поstu: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Ви впевнені, що хочете видалити цей пост?')) {
-      // In a real implementation, you would call an API to delete the post
-      console.log('Deleting blog post:', id);
+      setOperationLoading(true);
+      const result = await deletePost(id);
+      
+      if (!result.success) {
+        alert('Помилка видалення поstu: ' + result.error);
+      }
+      setOperationLoading(false);
     }
   };
 
-  const togglePublished = async (post: BlogPost) => {
-    // In a real implementation, you would call an API to toggle published status
-    console.log('Toggling published status:', post.id, !post.published);
+  const handleTogglePublished = async (post: BlogPost) => {
+    setOperationLoading(true);
+    const result = await togglePublished(post.id, post.published);
+    
+    if (!result.success) {
+      alert('Помилка зміни статусу публікації: ' + result.error);
+    }
+    setOperationLoading(false);
   };
 
   if (loading) {
@@ -296,7 +335,7 @@ export default function BlogManagement() {
                   
                   <div className="flex items-center space-x-2 ml-4">
                     <button
-                      onClick={() => togglePublished(post)}
+                      onClick={() => handleTogglePublished(post)}
                       className={`p-2 transition-colors ${
                         post.published 
                           ? 'text-green-400 hover:text-green-300' 

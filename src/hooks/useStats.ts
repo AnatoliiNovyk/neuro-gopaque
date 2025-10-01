@@ -74,7 +74,90 @@ export function useStats() {
     fetchStats();
   }, [refetch]);
 
+  const createStat = async (statData: Omit<SiteStats, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('site_stats')
+        .insert([{
+          ...statData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      refetchStats();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error creating stat:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const updateStat = async (id: string, updates: Partial<SiteStats>) => {
+    try {
+      const { error } = await supabase
+        .from('site_stats')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchStats();
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating stat:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const deleteStat = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('site_stats')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchStats();
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting stat:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
+  const reorderStat = async (id: string, newOrderIndex: number) => {
+    try {
+      const { error } = await supabase
+        .from('site_stats')
+        .update({ 
+          order_index: newOrderIndex,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      refetchStats();
+      return { success: true };
+    } catch (error) {
+      console.error('Error reordering stat:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
   const refetchStats = () => setRefetch(prev => prev + 1);
 
-  return { stats, loading, error, refetchStats };
+  return { 
+    stats, 
+    loading, 
+    error, 
+    refetchStats,
+    createStat,
+    updateStat,
+    deleteStat,
+    reorderStat
+  };
 }
